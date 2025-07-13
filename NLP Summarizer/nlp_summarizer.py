@@ -1,4 +1,60 @@
 #NLP Pipeline for regulatory documents summarization 
+import os 
+import json 
+import re
+from langchain.document_loaders import PyPDFLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.chains.summarize import load_summarize_chain
+from transformers import pipeline
+from langchain.chat_models import ChatGroq
 
-def summarize_text(text):
-    pass # Placeholder for summarization logic
+
+#load the data from the data folder and split the pdf into chunks
+def load_and_split(filepath):
+    for data in os.listdir(filepath):
+        if data.endswith('.pdf'):
+            loader = PyPDFLoader(os.path.join(filepath, data))
+            documents = loader.load()
+            text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
+            split_docs = text_splitter.split_documents(documents)
+            return split_docs
+
+# summarize the text using a summarization model and ChatGroq
+def summarize_documents(split_docs, temperature=0.2):
+    llm = ChatGroq(model="deepseek-r1-distill-llama-70b",  
+    temperature = temperature,                       
+    max_tokens=256,                        
+    reasoning_format="parsed",             
+    timeout=30,                            
+    max_retries=2)
+
+    chain = load_summarize_chain(llm, chain_type="map_reduce", verbose=True)
+    summary = chain.run(split_docs)
+    return summary
+
+
+#extract obligations from the summary using a regex pattern
+def extract_obligations(summary_text):
+    obligation_sentences = []
+    sentences = re.split(r'(?<=[.?!])\s+', summary_text)
+    for sentence in sentences:
+        if re.search(r'\b(must|shall|required|ensure|comply|prohibited)\b', sentence, re.IGNORECASE):
+            obligation_sentences.append(sentence.strip())
+    return obligation_sentences
+
+#format the obligations into a structured JSON format
+def format_obligations(obligations, source="NLP Summarizer"):
+    formatted_obligations = []
+    for obligation in obligations:
+        formatted_obligations.append({"obligation": obligation, 
+                                      "source": source, 
+                                      "type": "obligation"})
+    return json.dumps(formatted_obligations, indent=4)
+
+#full pipeline to run the summarization and obligation extraction
+def regula_ai_nlp_pipeline(filepath, source_name="NLP Summarizer"):
+    split_docs = load_and_split(filepath)
+    summary = summarize_documents(split_docs)
+    obligations = extract_obligations(summary)
+    formatted_obligations = format_obligations(obligations, source = source_name)
+    return formatted_obligations
