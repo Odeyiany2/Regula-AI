@@ -18,9 +18,13 @@ def load_and_split(filepath):
         if data.endswith('.pdf'):
             loader = PyPDFLoader(os.path.join(filepath, data))
             documents = loader.load()
+            print(f"Loaded {len(documents)} pages from {data}")
             text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
             split_docs = text_splitter.split_documents(documents)
+            print(f"Split into {len(split_docs)} chunks.")
             return split_docs
+    print("No PDF files found or failed to load.")
+    return []
 
 # summarize the text using a summarization model and ChatGroq
 def summarize_documents(split_docs, temperature=0.2):
