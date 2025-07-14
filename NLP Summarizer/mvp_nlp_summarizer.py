@@ -7,8 +7,11 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.chains.summarize import load_summarize_chain
 from transformers import pipeline
 from langchain_groq.chat_models import ChatGroq
+import dotenv
+# Load environment variables from .env file
+dotenv.load_dotenv()
 
-
+os.environ["GROQ_API_KEY"] = os.getenv("API_KEY")
 #load the data from the data folder and split the pdf into chunks
 def load_and_split(filepath):
     for data in os.listdir(filepath):
@@ -21,12 +24,8 @@ def load_and_split(filepath):
 
 # summarize the text using a summarization model and ChatGroq
 def summarize_documents(split_docs, temperature=0.2):
-    llm = ChatGroq(model="deepseek-r1-distill-llama-70b",  
-    temperature = temperature,                       
-    max_tokens=256,                        
-    reasoning_format="parsed",             
-    timeout=30,                            
-    max_retries=2)
+    llm = ChatGroq(model="llama-3.3-70b-versatile",              
+    temperature = temperature)
 
     chain = load_summarize_chain(llm, chain_type="map_reduce", verbose=True)
     summary = chain.run(split_docs)
