@@ -28,7 +28,7 @@ def summarize_documents(split_docs, temperature=0.2):
     temperature = temperature)
 
     chain = load_summarize_chain(llm, chain_type="map_reduce", verbose=True)
-    summary = chain.run(split_docs)
+    summary = chain.invoke(split_docs)
     return summary
 
 
