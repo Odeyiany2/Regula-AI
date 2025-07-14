@@ -2,7 +2,8 @@
 import os 
 import json 
 import re
-from langchain_community.document_loaders import PyPDFLoader
+from langchain_community.document_loaders import PyPDFLoader, PyMuPDFLoader
+#using 
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.chains.summarize import load_summarize_chain
 from transformers import pipeline
@@ -12,19 +13,25 @@ import dotenv
 dotenv.load_dotenv()
 
 os.environ["GROQ_API_KEY"] = os.getenv("API_KEY")
+
 #load the data from the data folder and split the pdf into chunks
 def load_and_split(filepath):
-    for data in os.listdir(filepath):
-        if data.endswith('.pdf'):
-            loader = PyPDFLoader(os.path.join(filepath, data))
-            documents = loader.load()
-            print(f"Loaded {len(documents)} pages from {data}")
-            text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
-            split_docs = text_splitter.split_documents(documents)
-            print(f"Split into {len(split_docs)} chunks.")
-            return split_docs
-    print("No PDF files found or failed to load.")
-    return []
+    all_docs = []
+    for file in os.listdir(filepath):
+        if file.endswith(".pdf"):
+            loader = PyMuPDFLoader(os.path.join(filepath, file))
+            docs = loader.load()
+            all_docs.extend(docs)
+
+    if not all_docs:
+        print("No readable PDFs found!")
+        return []
+
+    print(f"Loaded {len(all_docs)} documents.")
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
+    split_docs = text_splitter.split_documents(all_docs)
+    print(f"Split into {len(split_docs)} chunks.")
+    return split_docs
 
 # summarize the text using a summarization model and ChatGroq
 def summarize_documents(split_docs, temperature=0.2):
