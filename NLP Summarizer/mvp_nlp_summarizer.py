@@ -2,11 +2,11 @@
 import os 
 import json 
 import re
-from langchain.document_loaders import PyPDFLoader
+from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.chains.summarize import load_summarize_chain
 from transformers import pipeline
-from langchain.chat_models import ChatGroq
+from langchain_groq.chat_models import ChatGroq
 
 
 #load the data from the data folder and split the pdf into chunks
@@ -58,3 +58,14 @@ def regula_ai_nlp_pipeline(filepath, source_name="NLP Summarizer"):
     obligations = extract_obligations(summary)
     formatted_obligations = format_obligations(obligations, source = source_name)
     return formatted_obligations
+
+
+#testing the pipeline with the data folder
+if __name__ == "__main__":
+    data_folder = r"C:\Projects_ML\Regula-AI\NLP Summarizer\Data"
+    source_name = "NLP Summarizer"
+    obligations_json = regula_ai_nlp_pipeline(data_folder, source_name)
+    print(obligations_json)
+
+#example to run the script to summarize a PDF and extract obligations
+# python mvp_nlp_summarizer.py
