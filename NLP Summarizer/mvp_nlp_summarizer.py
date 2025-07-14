@@ -28,7 +28,7 @@ def summarize_documents(split_docs, temperature=0.2):
     temperature = temperature)
 
     chain = load_summarize_chain(llm, chain_type="map_reduce", verbose=True)
-    summary = chain.invoke(split_docs)
+    summary = chain.run(split_docs)
     return summary
 
 
@@ -54,7 +54,9 @@ def format_obligations(obligations, source="NLP Summarizer"):
 def regula_ai_nlp_pipeline(filepath, source_name="NLP Summarizer"):
     split_docs = load_and_split(filepath)
     summary = summarize_documents(split_docs)
+    print("\n📝 Raw Summary Output:\n", summary)  # Add this
     obligations = extract_obligations(summary)
+    print("\n✅ Extracted Obligation Sentences:\n", obligations)  # Add this
     formatted_obligations = format_obligations(obligations, source = source_name)
     return formatted_obligations
 
